@@ -1,18 +1,34 @@
-const express = require('express')
-const cors = require('cors')
-const bodyparser = require('body-parser')
+require('dotenv').config()
+const express = require('express') // pembuat server pengganti http module
+const bodyParser = require('body-parser') // untuk menampung req.body
+const cors = require('cors') // izin sharing data
+// const mysql = require('mysql') // untuk sambungin api dengan mysql database
 
-// main app
+// create app
 const app = express()
-
 // apply middleware
 app.use(cors())
-app.use(bodyparser.json())
+app.use(bodyParser.json())
+app.use(express.static('./public'))
 
-// main route
-const response = (req, res) => res.status(200).send('<h1>REST API JCWM1504</h1>')
-app.get('/', response)
+// import connection
+const db = require('./database')
+db.connect((err) => {
+    if (err) return console.log(`connecting error : ${err.stack}`)
+    console.log(`connected as id : ${db.threadId}`)
+})
 
-// bind to local machine
-const PORT = process.env.PORT || 2000
-app.listen(PORT, () => console.log(`CONNECTED : port ${PORT}`))
+// create home route
+app.get('/', (req, res) => {
+    res.status(200).send('<h1>this is home</h1>')
+})
+
+// import router
+const {clientRouter, adminRouter} = require('./routers')
+app.use('/sales', clientRouter)
+app.use('/admin', adminRouter)
+// app.use('/profile', profileRouter)
+// app.use('/category', categoryRouter)
+
+const port = 2000
+app.listen(port, () => console.log(`connected to port ${port}`))
